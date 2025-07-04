@@ -1,5 +1,9 @@
 name: Build LED Battery Monitor Binaries
 
+permissions:
+  contents: write
+  actions: read
+
 on:
   push:
     branches: [ main, master ]
@@ -138,7 +142,7 @@ jobs:
           
           ```bash
           # Download (replace with actual release URL)
-          wget https://github.com/YOUR_USERNAME/led-battery-monitor/releases/latest/download/led-battery-monitor-linux-x64
+          wget https://github.com/${{ github.repository }}/releases/latest/download/led-battery-monitor-linux-x64
           
           # Make executable
           chmod +x led-battery-monitor-linux-x64
