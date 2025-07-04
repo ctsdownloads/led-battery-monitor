@@ -57,7 +57,7 @@ A sophisticated Python application that displays real-time battery status and ti
 
 ### Step 1: Purchase Hardware
 1. **Get Framework Laptop 16**: If you don't have one already
-2. **You need LED Modules**: [2× LED Matrix modules](https://frame.work/products/16-led-matrix?v=FRAKDE0001) from Framework ($39 each)
+2. **You need LED Modules**: [2× LED Matrix modules](https://frame.work/products/16-led-matrix?v=FRAKDE0001) from Framework
 
 ### Step 2: Hardware Installation
 1. **Power Down**: Shut down your Framework Laptop 16
