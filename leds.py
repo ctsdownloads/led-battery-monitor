@@ -543,7 +543,7 @@ def run_battery_monitoring():
     monitoring = False
 
 def create_progress_display(progress_percentage):
-    """Create track progress display matrix - shows song progress as a vertical bar"""
+    """Create track progress display matrix - shows song progress as a vertical bar WITHOUT borders"""
     columns = []
     fill_level = (progress_percentage / 100.0) * 30  # 30 rows (2 to 32) for 0-100%
     full_rows = math.floor(fill_level)
@@ -552,33 +552,23 @@ def create_progress_display(progress_percentage):
 
     for col in range(WIDTH):
         column = [0] * HEIGHT
-        # Borders (same as battery)
-        if 3 <= col <= 5:
-            column[0] = MAX_BRIGHT  # Top cap
-        if col in (0, 1, 2, 6, 7, 8):
-            column[1] = MAX_BRIGHT  # Top border
-        for row in range(2, 33):
-            if col in (0, 8):
-                column[row] = MAX_BRIGHT  # Side borders
-            elif 2 <= col <= 6:
+        
+        # NO BORDERS - only fill inner columns 2-6
+        if 2 <= col <= 6:
+            for row in range(2, 33):
                 if row > 32 - full_rows:
                     column[row] = MAX_BRIGHT  # Full rows
                 elif row == partial_row and partial_row is not None:
                     # Center-out fade for partial row
                     if col == 4:
-                        fade_factor = min(1.0, partial_fraction / 0.33)  # 0 to 0.33
+                        fade_factor = min(1.0, partial_fraction / 0.33)
                     elif col in (3, 5):
-                        fade_factor = max(0.0, (partial_fraction - 0.33) / 0.33)  # 0.33 to 0.66
+                        fade_factor = max(0.0, (partial_fraction - 0.33) / 0.33)
                     elif col in (2, 6):
-                        fade_factor = max(0.0, (partial_fraction - 0.66) / 0.34)  # 0.66 to 1.0
+                        fade_factor = max(0.0, (partial_fraction - 0.66) / 0.34)
                     column[row] = int(round(MAX_BRIGHT * fade_factor))
                 else:
                     column[row] = 0
-        column[33] = MAX_BRIGHT  # Bottom border
-        
-        # Add music progress indicator icon at top (different from battery)
-        if col == 4:  # Center column
-            column[0] = MAX_BRIGHT  # Music note icon
         
         columns.append(column)
 
@@ -1380,6 +1370,17 @@ def create_battery_frame(p, c, pulse_fade):
                     column[row] = 0
         column[33] = MAX_BRIGHT  # Bottom border
         columns.append(column)
+
+    # Apply pulse effect with proper clamping
+    if c is not None:
+        for col in range(2, 7):
+            for row in range(2, 33):
+                if columns[col][row] > 0:  # Only apply to lit pixels
+                    m = compute_multiplier(row, c, SIGMA, MIN_M)
+                    new_value = int(round(columns[col][row] * m))
+                    columns[col][row] = max(0, min(255, new_value))  # Clamp to valid range
+
+    return columns
 
     # Apply pulse effect with proper clamping
     if c is not None:
