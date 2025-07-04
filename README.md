@@ -72,9 +72,6 @@ wget https://github.com/ctsdownloads/led-battery-monitor/releases/latest/downloa
 # Make executable
 chmod +x led-battery-monitor-linux-x64
 
-# Add user to dialout group for serial port access
-sudo usermod -a -G dialout $USER
-
 # Log out and back in (or restart) for group changes to take effect
 ./led-battery-monitor-linux-x64
 ```
@@ -165,8 +162,7 @@ python -m PyInstaller --onefile leds.py
 
 ### Common Solutions
 1. **Reseat Modules**: Remove and reinsert LED modules
-2. **Check Permissions**: `sudo usermod -a -G dialout $USER` then restart
-3. **Flash Test**: Use built-in flash test from brightness menu
+2. **Flash Test**: Use built-in flash test from brightness menu
 
 ### Battery Issues
 ```bash
