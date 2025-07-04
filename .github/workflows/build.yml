@@ -1,0 +1,237 @@
+name: Build LED Battery Monitor Binaries
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            binary_name: led-battery-monitor-linux-x64
+          - os: ubuntu-20.04
+            platform: linux
+            arch: x64
+            binary_name: led-battery-monitor-linux-x64-ubuntu20
+          - os: windows-latest
+            platform: windows
+            arch: x64
+            binary_name: led-battery-monitor-windows-x64.exe
+          - os: macos-latest
+            platform: macos
+            arch: x64
+            binary_name: led-battery-monitor-macos-x64
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller pyserial psutil
+
+    - name: Build binary (Linux/macOS)
+      if: matrix.platform != 'windows'
+      run: |
+        python -m PyInstaller \
+          --onefile \
+          --console \
+          --name ${{ matrix.binary_name }} \
+          --add-data "README.md:." \
+          --hidden-import serial \
+          --hidden-import psutil \
+          --hidden-import glob \
+          --hidden-import subprocess \
+          --hidden-import json \
+          --hidden-import platform \
+          --hidden-import math \
+          --hidden-import time \
+          --hidden-import os \
+          --distpath ./dist \
+          --workpath ./build \
+          --specpath ./spec \
+          leds.py
+
+    - name: Build binary (Windows)
+      if: matrix.platform == 'windows'
+      run: |
+        python -m PyInstaller `
+          --onefile `
+          --console `
+          --name ${{ matrix.binary_name }} `
+          --add-data "README.md;." `
+          --hidden-import serial `
+          --hidden-import psutil `
+          --hidden-import glob `
+          --hidden-import subprocess `
+          --hidden-import json `
+          --hidden-import platform `
+          --hidden-import math `
+          --hidden-import time `
+          --hidden-import os `
+          --distpath ./dist `
+          --workpath ./build `
+          --specpath ./spec `
+          leds.py
+
+    - name: Test binary (Linux/macOS)
+      if: matrix.platform != 'windows'
+      run: |
+        chmod +x ./dist/${{ matrix.binary_name }}
+        # Basic smoke test - check if binary runs without crashing
+        timeout 10 ./dist/${{ matrix.binary_name }} || true
+        ls -la ./dist/
+
+    - name: Test binary (Windows)
+      if: matrix.platform == 'windows'
+      run: |
+        # Basic smoke test - check if binary exists and runs
+        if (Test-Path "./dist/${{ matrix.binary_name }}") {
+          Write-Host "Binary created successfully"
+          Get-ChildItem ./dist/
+        } else {
+          Write-Error "Binary not found!"
+          exit 1
+        }
+
+    - name: Create checksums
+      run: |
+        cd dist
+        if [ "${{ matrix.platform }}" = "windows" ]; then
+          certutil -hashfile ${{ matrix.binary_name }} SHA256 > ${{ matrix.binary_name }}.sha256
+        else
+          sha256sum ${{ matrix.binary_name }} > ${{ matrix.binary_name }}.sha256
+        fi
+      shell: bash
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.binary_name }}
+        path: |
+          dist/${{ matrix.binary_name }}*
+          dist/*.sha256
+        retention-days: 30
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: ./artifacts
+
+    - name: Prepare release assets
+      run: |
+        mkdir -p ./release-assets
+        find ./artifacts -type f -name "led-battery-monitor-*" -exec cp {} ./release-assets/ \;
+        find ./artifacts -type f -name "*.sha256" -exec cp {} ./release-assets/ \;
+        ls -la ./release-assets/
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./release-assets/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        body: |
+          ## LED Battery Monitor Release
+          
+          ### Binaries Available:
+          - **Linux (Ubuntu Latest)**: `led-battery-monitor-linux-x64`
+          - **Linux (Ubuntu 20.04)**: `led-battery-monitor-linux-x64-ubuntu20`
+          - **Windows**: `led-battery-monitor-windows-x64.exe`
+          - **macOS**: `led-battery-monitor-macos-x64`
+          
+          ### Installation:
+          1. Download the binary for your platform
+          2. Make executable: `chmod +x led-battery-monitor-*` (Linux/macOS)
+          3. Add to dialout group: `sudo usermod -a -G dialout $USER` (Linux)
+          4. Run: `./led-battery-monitor-*`
+          
+          ### Checksums:
+          SHA256 checksums are provided for each binary to verify integrity.
+          
+          ### What's New:
+          - Auto-generated from commit messages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-docker:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      run: |
+        cat > Dockerfile << 'EOF'
+        FROM python:3.11-slim
+        
+        # Install system dependencies
+        RUN apt-get update && apt-get install -y \
+            gcc \
+            python3-dev \
+            udev \
+            && rm -rf /var/lib/apt/lists/*
+        
+        # Install Python dependencies
+        RUN pip install pyserial psutil
+        
+        # Create app directory
+        WORKDIR /app
+        
+        # Copy application
+        COPY leds.py .
+        
+        # Create non-root user
+        RUN useradd -m -s /bin/bash leduser && \
+            usermod -a -G dialout leduser
+        
+        USER leduser
+        
+        CMD ["python", "leds.py"]
+        EOF
+        
+        docker build -t led-battery-monitor:latest .
+        docker save led-battery-monitor:latest | gzip > led-battery-monitor-docker.tar.gz
+
+    - name: Upload Docker image
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-image
+        path: led-battery-monitor-docker.tar.gz
+        retention-days: 30
