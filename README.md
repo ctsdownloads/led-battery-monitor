@@ -25,7 +25,7 @@ A sophisticated Python application that displays real-time battery status and ti
 *Automatically switches to music mode when Spotify is playing*
 
 ![Spotify Mode 2](https://raw.githubusercontent.com/ctsdownloads/led-battery-monitor/8ce7cfc879ba07e71badfdfb03dd83a1a20669e6/images/spotify2.jpg)
-*Left module: track progress bar, Right module: scrolling artist and song information*
+*Left module: track progress bar (**not battery, a progress indicator**), Right module: scrolling artist and song information*
 
 ## 🌟 Features
 
