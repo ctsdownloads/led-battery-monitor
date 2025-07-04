@@ -110,6 +110,8 @@ jobs:
       run: |
         mkdir -p ./release-assets
         find ./artifacts -type f -name "led-battery-monitor-*" -exec cp {} ./release-assets/ \;
+        # Add the source file
+        cp leds.py ./release-assets/
         ls -la ./release-assets/
 
     - name: Create Release
