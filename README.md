@@ -30,7 +30,7 @@ A sophisticated Python application that displays real-time battery status and ti
 ## 🌟 Features
 
 ### 🔋 **Framework Laptop 16 LED Module Integration**
-- **Dual 9×34 LED Modules**: Perfect fit for Framework Laptop 16 LED modules
+- **Dual LED Modules**: Perfect fit for Framework Laptop 16 LED modules
 - **Left Module**: Battery level visualization with animated fill levels
 - **Right Module**: Time remaining display with digital clock format
 - **Pulse Animation**: Visual feedback during charging/discharging cycles
