@@ -1,6 +1,6 @@
 # LED Battery Monitor (With Spotify Compatibility)
 
-(This a personal project I put together, because it was fun)
+> (This a personal project I put together, because it was fun)
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.12-blue.svg)
