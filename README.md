@@ -10,6 +10,23 @@
 
 A sophisticated Python application that displays real-time battery status and time remaining on **Framework Laptop 16 LED modules**, featuring Spotify integration, customizable brightness controls, and a comprehensive menu system.
 
+## 📖 Quick Navigation
+
+**🚀 Get Started Fast**
+- [📦 Installation](#-getting-started) | [💻 Download Latest Release](https://github.com/ctsdownloads/led-battery-monitor/releases/latest)
+- [🛒 Hardware Setup](#step-2-hardware-installation) | [🔧 Usage Guide](#-usage)
+
+**📱 Features & Examples**
+- [🖼️ Live Display Photos](#️-live-display-examples) | [🌟 Feature Overview](#-features)
+- [🎵 Spotify Setup](#spotify-setup) | [🔆 Brightness Settings](#brightness-settings)
+
+**⚙️ Configuration & Support**
+- [📋 Settings & Config](#-configuration) | [🔍 Troubleshooting](#-troubleshooting)
+- [🛠️ Development Setup](#-development) | [🤝 Contributing](#-contributing)
+
+**📊 Compatibility**
+- [🐧 Linux Distributions](#platform-compatibility) | [🔋 Hardware Requirements](#step-1-purchase-hardware)
+
 ## 🖼️ Live Display Examples
 
 ### Battery Monitoring Mode
